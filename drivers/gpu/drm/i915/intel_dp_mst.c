@@ -129,8 +129,8 @@ static int intel_dp_mst_atomic_check(struct drm_connector *connector,
 }
 
 static void intel_mst_disable_dp(struct intel_encoder *encoder,
-				 struct intel_crtc_state *old_crtc_state,
-				 struct drm_connector_state *old_conn_state)
+				 const struct intel_crtc_state *old_crtc_state,
+				 const struct drm_connector_state *old_conn_state)
 {
 	struct intel_dp_mst_encoder *intel_mst = enc_to_mst(&encoder->base);
 	struct intel_digital_port *intel_dig_port = intel_mst->primary;
@@ -152,8 +152,8 @@ static void intel_mst_disable_dp(struct intel_encoder *encoder,
 }
 
 static void intel_mst_post_disable_dp(struct intel_encoder *encoder,
-				      struct intel_crtc_state *old_crtc_state,
-				      struct drm_connector_state *old_conn_state)
+				      const struct intel_crtc_state *old_crtc_state,
+				      const struct drm_connector_state *old_conn_state)
 {
 	struct intel_dp_mst_encoder *intel_mst = enc_to_mst(&encoder->base);
 	struct intel_digital_port *intel_dig_port = intel_mst->primary;
@@ -182,8 +182,8 @@ static void intel_mst_post_disable_dp(struct intel_encoder *encoder,
 }
 
 static void intel_mst_pre_enable_dp(struct intel_encoder *encoder,
-				    struct intel_crtc_state *pipe_config,
-				    struct drm_connector_state *conn_state)
+				    const struct intel_crtc_state *pipe_config,
+				    const struct drm_connector_state *conn_state)
 {
 	struct intel_dp_mst_encoder *intel_mst = enc_to_mst(&encoder->base);
 	struct intel_digital_port *intel_dig_port = intel_mst->primary;
@@ -225,8 +225,8 @@ static void intel_mst_pre_enable_dp(struct intel_encoder *encoder,
 }
 
 static void intel_mst_enable_dp(struct intel_encoder *encoder,
-				struct intel_crtc_state *pipe_config,
-				struct drm_connector_state *conn_state)
+				const struct intel_crtc_state *pipe_config,
+				const struct drm_connector_state *conn_state)
 {
 	struct intel_dp_mst_encoder *intel_mst = enc_to_mst(&encoder->base);
 	struct intel_digital_port *intel_dig_port = intel_mst->primary;
