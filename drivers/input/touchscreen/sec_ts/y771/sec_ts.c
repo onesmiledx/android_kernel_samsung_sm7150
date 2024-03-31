@@ -14,6 +14,11 @@ struct sec_ts_data *tsp_info;
 
 #include "sec_ts.h"
 
+#ifdef CONFIG_FB
+#include <linux/notifier.h>
+#include <linux/fb.h>
+#endif
+
 struct sec_ts_data *ts_dup;
 int layer_data[TYPE_RAWDATA_MAX];
 
@@ -2602,6 +2607,13 @@ static void sec_factory_type_init(void)
 	layer_data[TYPE_RAW_DATA_NODE_GAP_Y] = TYPE_REMAP;
 	layer_data[TYPE_DECODED_REMAPPED_DATA] = TYPE_REMAP;
 }
+
+#ifdef CONFIG_FB
+static int fb_notifier_callback(struct notifier_block *self,
+				unsigned long event,
+				void *data);
+#endif
+
 static int sec_ts_probe(struct i2c_client *client, const struct i2c_device_id *id)
 {
 	struct sec_ts_data *ts;
@@ -2887,6 +2899,12 @@ static int sec_ts_probe(struct i2c_client *client, const struct i2c_device_id *i
 		input_err(true, &ts->client->dev, "%s: Unable to request threaded irq\n", __func__);
 		goto err_irq;
 	}
+
+#ifdef CONFIG_FB
+	ts->fb_notif.notifier_call = fb_notifier_callback;
+	if (fb_register_client(&ts->fb_notif))
+		pr_err("%s: could not create fb notifier\n", __func__);
+#endif
 
 #ifdef CONFIG_SAMSUNG_TUI
 	tsp_info = ts;
@@ -3489,6 +3507,10 @@ static int sec_ts_remove(struct i2c_client *client)
 	ts_dup = NULL;
 	ts->plat_data->power(ts, false);
 
+#ifdef CONFIG_FB
+	fb_unregister_client(&ts->fb_notif);
+#endif
+
 #ifdef CONFIG_SAMSUNG_TUI
 	tsp_info = NULL;
 #endif
@@ -3623,6 +3645,36 @@ static int sec_ts_pm_resume(struct device *dev)
 	struct sec_ts_data *ts = dev_get_drvdata(dev);
 
 		complete_all(&ts->resume_done);
+
+	return 0;
+}
+#endif
+
+#ifdef CONFIG_FB
+static int fb_notifier_callback(struct notifier_block *self,
+				unsigned long event,
+				void *data)
+{
+	struct fb_event *evdata = data;
+
+	// Only run for internal screen (fb0)
+	if (evdata && evdata->info->node != 0) return 0;
+
+	if (evdata && evdata->data && event == FB_EVENT_BLANK) {
+		int *blank = evdata->data;
+		switch (*blank) {
+		case FB_BLANK_UNBLANK:
+		case FB_BLANK_NORMAL:
+		case FB_BLANK_VSYNC_SUSPEND:
+		case FB_BLANK_HSYNC_SUSPEND:
+			break;
+		case FB_BLANK_POWERDOWN:
+			break;
+		default:
+			/* Don't handle what we don't understand */
+			break;
+		}
+	}
 
 	return 0;
 }
